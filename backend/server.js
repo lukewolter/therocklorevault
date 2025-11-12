@@ -55,9 +55,12 @@ async function getSpotifyAccessToken() {
 
 app.get('/api/videos', async (req, res) => {
   try {
-    const cachedVideos = cache.get('videos');
-    if (cachedVideos) {
-      return res.json(cachedVideos);
+    const pageToken = req.query.pageToken;
+    const cacheKey = pageToken ? `videos_${pageToken}` : 'videos';
+    
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
     }
 
     const apiKey = process.env.YOUTUBE_API_KEY;
@@ -70,18 +73,22 @@ app.get('/api/videos', async (req, res) => {
       });
     }
 
+    const params = {
+      key: apiKey,
+      channelId: channelId,
+      part: 'snippet',
+      order: 'date',
+      maxResults: 12,
+      type: 'video',
+    };
+
+    if (pageToken) {
+      params.pageToken = pageToken;
+    }
+
     const response = await axios.get(
       `https://www.googleapis.com/youtube/v3/search`,
-      {
-        params: {
-          key: apiKey,
-          channelId: channelId,
-          part: 'snippet',
-          order: 'date',
-          maxResults: 12,
-          type: 'video',
-        },
-      }
+      { params }
     );
 
     const videos = response.data.items.map(item => ({
@@ -93,8 +100,14 @@ app.get('/api/videos', async (req, res) => {
       channelTitle: item.snippet.channelTitle,
     }));
 
-    cache.set('videos', videos);
-    res.json(videos);
+    const result = {
+      videos,
+      nextPageToken: response.data.nextPageToken,
+      totalResults: response.data.pageInfo.totalResults,
+    };
+
+    cache.set(cacheKey, result);
+    res.json(result);
   } catch (error) {
     console.error('Error fetching YouTube videos:', error.response?.data || error.message);
     res.status(500).json({ 
