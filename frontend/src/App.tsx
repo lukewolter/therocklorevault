@@ -149,6 +149,30 @@ function App() {
     return `${minutes}m`;
   };
 
+  const handleVideoClick = (e: React.MouseEvent<HTMLAnchorElement>, videoId: string) => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/.test(userAgent);
+    const isAndroid = /android/.test(userAgent);
+    
+    if (isIOS || isAndroid) {
+      e.preventDefault();
+      
+      const appUrl = isIOS 
+        ? `youtube://watch?v=${videoId}`
+        : `vnd.youtube://${videoId}`;
+      
+      const webUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      
+      window.location.href = appUrl;
+      
+      setTimeout(() => {
+        if (document.visibilityState === 'visible') {
+          window.open(webUrl, '_blank');
+        }
+      }, 800);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnpNNiAzNGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTM2IDM0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-20"></div>
@@ -231,6 +255,7 @@ function App() {
                     href={`https://www.youtube.com/watch?v=${video.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => handleVideoClick(e, video.id)}
                     className="group bg-gray-800/50 backdrop-blur-sm rounded-lg overflow-hidden border border-gray-700 hover:border-purple-500 transition-all hover:shadow-lg hover:shadow-purple-500/30 hover:scale-105"
                   >
                     <div className="relative aspect-video overflow-hidden">
